@@ -771,15 +771,14 @@ class DeviceThermalComfort:
 
     @compute_once_lock(SensorType.ABSOLUTE_HUMIDITY)
     async def absolute_humidity(self) -> float:
-        """Absolute Humidity <https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/>."""
+        """Absolute Humidity <https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/>. and with  https://en.wikipedia.org/wiki/Arden_Buck_equation"""
         abs_temperature = self._temperature + 273.15
-        abs_humidity = 6.112
-        abs_humidity *= math.exp(
-            (17.67 * self._temperature) / (243.5 + self._temperature)
-        )
-        abs_humidity *= self._humidity
-        abs_humidity *= 2.1674
-        abs_humidity /= abs_temperature
+        if self._temperature > 0 :
+            saturation_vapor_pressure = 6.1121 * math.exp((18.678 - (self._temperature/234.5)) * (self._temperature / (257.14 + self._temperature)))
+        else:
+            saturation_vapor_pressure = 6.1115 * math.exp ((23.036 - (self._temperature/333.7)) * (self._temperature /(279.82 + self._temperature)))
+       
+        abs_humidity = (self._humidity * saturation_vapor_pressure) / (abs_temperature * 2.1674 )
         return abs_humidity
 
     @compute_once_lock(SensorType.FROST_POINT)
